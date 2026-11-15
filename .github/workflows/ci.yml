@@ -1,0 +1,26 @@
+name: Docker Build CI
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    - name: Build Docker image
+      run: docker build -t mysite:${{ github.sha }} .
+
+    - name: Test container
+      run: |
+        docker run -d --name test-container -p 8080:80 mysite:${{ github.sha }}
+        sleep 5
+        curl -f http://localhost:8080 || exit 1
+        docker stop test-container
+        docker rm test-container
